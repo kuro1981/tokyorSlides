@@ -1,0 +1,162 @@
+---
+title: "tidymodelsでモデリング 事始め"
+author: "Kuro"
+format: 
+  revealjs:
+    theme: [simple, custom.scss]
+    width: 1280
+    height: 720
+    slide-number: true
+    footer: "#TokyoR"
+lang: ja
+---
+
+# tidymodelsでモデリング 事始め
+
+## 自己紹介
+
+-   名前 : 黒田
+-   所属 : 電通国際情報サービス
+
+![](./181120_8091.jpg){width="163"}
+
+## モデリングとは？
+
+#### 広義(ウィキペディア)
+
+> 科学的モデリング（かがくてきモデリング、英: Scientific \> modelling）とは、ある事象の抽象化されたコンセプトモデル・グラフィカルモデル・あるいは数理モデルを作るプロセスである。
+
+#### 機械学習領域(私見)
+
+(過去に)定義された数理モデルに実データをあてはめ、現象にあわせた数理モデルをつくる、試行錯誤を含む行為および そのモデルの確からしさを確認する行為。
+
+## 機械学習領域でのモデリングという行為の位置付け
+
+![](./t.drawio.svg)
+
+Wickham and Grolemund(2016) より作成
+
+## モデリングでやることの全体像
+
+サンプリング → 前処理、特徴量エンジニアリング → モデル構築 → モデル性能評価 → パラメータ探索
+
+## tidymodelsとはなにか？
+
+### モデリングで必須の反復作業に課題あり
+
+Rではモデルを含む分析を実行するためのパーツがパッケージとして提供されている
+
+-   パッケージ毎に関数の記法が違う\
+    例)ランダムフォレスト系
+
+    +----------------+-----------------+----------------+------------------------+
+    | パッケージ     | 決定木に与える\ | 作成する\      | ノード中の\            |
+    |                | 特徴量数        | 決定木の数     | 最小サンプルの数       |
+    +:==============:+:===============:+:==============:+:======================:+
+    | ranger         | mtry            | num.trees      | min.node.size          |
+    +----------------+-----------------+----------------+------------------------+
+    | randomForest   | mtry            | ntree          | nodesize               |
+    +----------------+-----------------+----------------+------------------------+
+    | Rborist        | nSamp           | nTree          | minNode                |
+    +----------------+-----------------+----------------+------------------------+
+    | sparlyr        | mtry            | num.trees      | min_instances_per_node |
+    +----------------+-----------------+----------------+------------------------+
+
+-   データの入力、出力の形式が違う
+
+## tidymodelsに含まれる主なパッケージとモデリングでの位置付け
+
+## 本日説明しないこと
+
+ワークフローについて
+
+こまかなパラメータ探索、
+
+詳細なアルゴリズムの説明
+
+## 本編
+
+## サンプリング
+
+{rsample}
+
+## データ分割
+### モデルの性能を評価するために入力データを学習データ(train)と評価データ(test)に分割します。
+
+基本的な構文
+
+```{r,echo=TRUE, prompt=TRUE}
+library(rsample)
+df <- iris
+# 8:2で分割するよという宣言
+df_split <- initial_split(df, prop=0.8)
+
+# 学習データ抽出
+df_train <- training(df_split)
+nrow(df_train)
+
+#評価データ抽出
+df_test <- testing(df_split)
+nrow(df_test)
+```
+
+このさき交差検証という手法がでてきます。
+
+## 分割方法は
+
+## 前処理、特徴量エンジニアリング
+
+## モデル構築
+
+## モデル性能評価
+
+## パラメータ探索 
+
+## 最後に
+
+## つぎ何をみるとよいか？
+
+```         
+- \[9 モデルの有効性の判断 \|Rによる整頓されたモデリング (tmwr.org)\](https://www.tmwr.org/performance.html)
+```
+
+## 付帯要素
+
+```         
+- CRANのすすめ
+
+- こまったときのNEXTアクション
+
+    - rwakarang
+
+    - HELP
+
+    - viggnet
+
+    - F2ボタン
+```
+
+\- 参考文献
+
+```         
+- [tidymodels で分類モデルをハイパーパラメータ・チューニングして学習して予測して評価する - Qiita\](https://qiita.com/KotaYoneda/items/1cde4d5b4c36ebdf0e72)
+
+- [tidymodelsによるtidyな機械学習（その1：データ分割と前処理から学習と性能評価まで） - Dropout (hatenablog.com)](https://dropout009.hatenablog.com/entry/2019/01/06/124932#tidy%E3%81%AA%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92%E3%83%95%E3%83%AD%E3%83%BC)
+
+- [Rユーザのためのtidymodels\[実践\]入門 〜モダンな統計・機械学習モデリングの世界：書籍案内｜技術評論社 (gihyo.jp)](https://gihyo.jp/book/2023/978-4-297-13236-1)
+
+- [【R】tydymodelsを用いてlightgbmをやってみる（その３） - Qiita](https://qiita.com/kenkenvw/items/d605050a88636cd677e7)
+
+- [R と tidymodels を使用して機械学習モデルを作成する - Training | Microsoft Learn](https://learn.microsoft.com/ja-jp/training/paths/machine-learning-with-r/)
+
+- [【tidymodels講座1】当講座の概要 - データサイエンスの道標 (datasciencemore.com)](https://datasciencemore.com/r-tidymodels-overview/)
+
+- [www.bing.com](https://www.bing.com/ck/a?!&&p=2e05a1addb3ff7d8JmltdHM9MTY3OTc4ODgwMCZpZ3VpZD0xNTRhNDMwZC00MTcwLTY2YzctMGM5MS01Mjc1NDAwYTY3NDEmaW5zaWQ9NTI3Mw&ptn=3&hsh=3&fclid=154a430d-4170-66c7-0c91-5275400a6741&psq=tidymodels+R&u=a1aHR0cHM6Ly9xaWl0YS5jb20vUmluZ2FfaHlqL2l0ZW1zLzdmZWQ5YTNhN2NjMjVjZGZhNjk1&ntb=1)
+
+- [www.bing.com](https://www.bing.com/ck/a?!&&p=e4c65784a040f81eJmltdHM9MTY3OTc4ODgwMCZpZ3VpZD0xNTRhNDMwZC00MTcwLTY2YzctMGM5MS01Mjc1NDAwYTY3NDEmaW5zaWQ9NTMxNA&ptn=3&hsh=3&fclid=154a430d-4170-66c7-0c91-5275400a6741&psq=tidymodels+R&u=a1aHR0cHM6Ly9kYXRhc2NpZW5jZW1vcmUuY29tL3ItdGlkeW1vZGVscy10aWR5dmVyc2Uv&ntb=1)
+
+- [Books \- Tidy Modeling with R](https://www.tidymodels.org/books/tmwr/)
+- [tidymodelsで覚えるRでのモデル構築と運用 / tidymodels2020 \- Speaker Deck](https://speakerdeck.com/s_uryu/tidymodels2020)
+- [ご注文は学習済モデルの確認ですか？BROOM【tidymodels, broom】 \- Qiita](https://qiita.com/Ringa_hyj/items/7fed9a3a7cc25cdfa695)
+- [【tidymodels講座2】\{tidyverse\}探索的データ分析 \- データサイエンスの道標](https://datasciencemore.com/r-tidymodels-tidyverse/)
+```
