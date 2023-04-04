@@ -1,0 +1,30 @@
+project:
+  type: website
+  output-dir: docs
+  render:
+    - "/index.qmd"
+  resources:
+    - 2023_TokyoR_for_begineer
+
+website:
+  title: "東京R資料置き場"
+  navbar:
+    background: primary
+    left:
+      - href: index.qmd
+        text: Home
+    right:
+      - icon: twitter
+        href: https://twitter.com/akaikaze_
+      - icon: github
+        href: https://github.com/kuro1981
+  repo-url: https://github.com/kuro1981/tokyorSlides
+  repo-actions: source
+  
+format:
+  html:
+    theme:
+      light: flatly
+      dark: darkly
+
+lang: ja
