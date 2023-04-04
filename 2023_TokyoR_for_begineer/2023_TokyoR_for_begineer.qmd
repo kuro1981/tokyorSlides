@@ -7,7 +7,10 @@ format:
     width: 1280
     height: 720
     slide-number: true
+    preview-links: auto
     footer: "#TokyoR"
+    self-contained: true
+    reference-location: document
 lang: ja
 ---
 
