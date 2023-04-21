@@ -28,7 +28,7 @@ engine: knitr
 ::: {.column width="75%"}
 -   [\@Kuroとか くろきち とか](https://twitter.com/akaikaze_)
     -   アカウント名の由来はむかーしのっていたカワサキの900ccの赤とKAZE(カワサキライダーズクラブ)とをくっつけた。
--   電通国際情報サービスとかいうSIerでAI関係の仕事しています。
+-   電通国際情報サービスというSIerでAI関係の仕事しています。
 -   主にPMと教育事業担当
 -   仕事ではほぼプログラム書きません。
 -   Rに最初にさわったのは大学の頃だから、、、、、20年以上まえですかね？ ≠ R歴
@@ -39,10 +39,6 @@ engine: knitr
 
 -   機械学習界隈におけるモデリングってなんぞや？
 -   R でどうやるのがナウい？(死語)
-
-。。。。。。
-
-と思ったんだが、 BING Chatさんが素晴しいので最初の一方を話そうかなと
 
 ## モデリングとは？
 
@@ -66,7 +62,7 @@ Wickham and Grolemund(2016) より作成
 
 ![](./t.drawio.svg){fig-align="center"}
 
-## モデリング内で沢山のタスクをこなしながら目的を達成していく必要がある {auto-animate=true}
+## モデリング内でタスク(検討することは)たくさんある
 
 ### モデリングで実施するタスク(例)
 
@@ -85,7 +81,7 @@ Wickham and Grolemund(2016) より作成
     -   サンプリング方法\
         クロスバリデーションする？
 
-## モデリング内で沢山のタスクをこなしながら目的を達成していく必要がある {auto-animate=true  visibility="uncounted"}
+## モデリング内でタスク(検討することは)たくさんある {auto-animate=true  visibility="uncounted"}
 
 ### モデリングで実施するタスク(例)
 3)  データの処置
@@ -226,28 +222,40 @@ rf_fit <- rf_spec %>%
   fit(Species ~ ., data = train_data)
 
 # モデルの評価
-rf_fit %>%
-  predict(test_data) %>%
-  bind_cols(test_data) %>%
-  metrics(truth = Species, estimate = .pred_class)
+pred_metrics <-
+  rf_fit %>%
+    predict(test_data) %>%
+    bind_cols(test_data) %>%
+    metrics(truth = Species, estimate = .pred_class)
 ```
 
-## サンプリング : resample パッケージ {.scrollable}
+## サンプリング : resample パッケージ
 
-### モデルの性能を評価するために入力データを学習データ(train)と評価データ(test)に分割します。
+### 手持ちのデータを学習データ(train)と評価データ(test)に分割します。
 
 #### なぜ？
+モデルの性能を評価するため。\
 学習に利用したデータ=既知(モデルが知っている)なので、モデルの評価に利用するとカンニングになる。\
 このカンニングのことを、リーケージとよぶ。\
 評価の為に新しくデータを用意できればよいが現実的ではないので、今あるデータを2つに分割して既知(学習データ)と未知(評価データ)として便宜あつかいます。
 
+::: aside
+リーケージについては下記などを参考に\
+[機械学習のリーケージについて考える｜西岡賢一郎@研究者から経営者へ｜note](https://note.com/kenichiro/n/n2ff08344160a#QYIn9)
 
+[正解率が高すぎる？AIを間違って導入しないために最低限知っておきたい知識｜西岡賢一郎@研究者から経営者へ｜note](https://note.com/kenichiro/n/nb46a7e112cfc#aX9FT)
+:::
+
+## サンプリング : resample パッケージ {.scrollable}
 ```{r,echo=TRUE, prompt=TRUE}
 library(rsample)
-df <- iris
+library(tidyverse)
+
+# as_tibbleはなくてもよい。
+iris_df <- iris %>% as_tibble()
 
 # 学習:評価=8:2で分割するよという宣言
-df_split <- initial_split(df, prop=0.8)
+df_split <- initial_split(iris_df, prop=0.7)
 
 # 学習データ抽出
 df_train <- training(df_split)
@@ -259,15 +267,8 @@ paste(nrow(df),nrow(df_train),nrow(df_test),sep=" - ")
 ```
 
 
-::: aside
-リーケージについては下記などを参考に\
-[機械学習のリーケージについて考える｜西岡賢一郎@研究者から経営者へ｜note](https://note.com/kenichiro/n/n2ff08344160a#QYIn9)
-
-[正解率が高すぎる？AIを間違って導入しないために最低限知っておきたい知識｜西岡賢一郎@研究者から経営者へ｜note](https://note.com/kenichiro/n/nb46a7e112cfc#aX9FT)
-:::
-
 ## モデル適用 : persnipパッケージ {auto-animate=true}
-### 機械学習タスクや利用するアルゴリズムやハイパーパラメータなどを設定し、実際にデータを当てはめ(学習)ます。
+### 機械学習タスクや利用するアルゴリズムやハイパーパラメータなどを設定し、実際にデータを当てはめ(学習)る。
 
 ```{r echo=TRUE, prompt=FALSE}
 # モデルの定義
@@ -279,10 +280,6 @@ rf_spec <-
 # モデルの学習
 rf_fit <- rf_spec %>%
   fit(Species ~ ., data = train_data)
-
-# モデルの評価
-pred <- rf_fit %>%
-  predict(test_data)
 ```
 
 ## モデル適用 : persnipパッケージ {auto-animate=true  visibility="uncounted"}
@@ -298,10 +295,6 @@ rf_spec <-
 # モデルの学習
 rf_fit <- rf_spec %>%
   fit(Species ~ ., data = train_data)
-
-# モデルの評価
-pred <- rf_fit %>%
-  predict(test_data)
 ```
 
 ### 利用できるモデルを知るには？
@@ -325,20 +318,35 @@ rf_fit <- rf_spec %>%
 # あえて説明変数を絞りたい場合は`+`でつなぐとよい。
 #rf_fit <- rf_spec %>%
 #  fit(Species ~ Sepal.Length+Sepal.Width, data = train_data)
-
-# モデルの評価
-pred <- rf_fit %>%
-  predict(test_data)
 ```
 
-### formula
+### formula 
 目的変数 ~(チルダ) .(ドット)でつないているところがformulaです。\
 .(ドット)は目的変数以外の全てをあらわします。\
 説明変数を明示的に示す場合は`+`でつなぐとよいです。\
 一部だけ利用するようなシーンは一般的ではなく、前処理で事前に落しておくのが一般的です。
 
-## 評価
+## 評価 : yardstick {auto-animate=true}
+```{r, echo=TRUE, prompt=FALSE}
+# モデルの評価
+pred_metrics <-
+  rf_fit %>%
+    predict(test_data) %>%
+    bind_cols(test_data) %>%
+    metrics(truth = Species, estimate = .pred_class)
+```
 
+### 未知データ(評価データ)にあてはめて、あてはまり度合いを測る。
+教師あり学習においては評価は答えあわせです。\
+`predict`でモデルくんの回答を作り、`bind_cols`で問題と答えとセットにする。\
+`metrics`で採点。採点基準はaccuracy(正解率)やMSE(平均二乗誤差)など、タスクと得たい結果にあわせて選択する必要がある。\
+どんな評価指標があるかは[こちら](https://yardstick.tidymodels.org/articles/metric-types.html)を参照のこと。\
+
+## 評価 : yardstick {auto-animate=true visibility="uncounted"}
+### また、
+[![評価指標入門](./評価指標入門.jpg){fig-align="center" }](https://www.amazon.co.jp/%E8%A9%95%E4%BE%A1%E6%8C%87%E6%A8%99%E5%85%A5%E9%96%80%E3%80%9C%E3%83%87%E3%83%BC%E3%82%BF%E3%82%B5%E3%82%A4%E3%82%A8%E3%83%B3%E3%82%B9%E3%81%A8%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E3%82%92%E3%81%A4%E3%81%AA%E3%81%90%E6%9E%B6%E3%81%91%E6%A9%8B-%E9%AB%98%E6%9F%B3-%E6%85%8E%E4%B8%80-ebook/dp/B0BT7GBF5L/ref=sr_1_1?adgrpid=146733477735&hvadid=649200618859&hvdev=c&hvqmt=e&hvtargid=kwd-1958982634281&hydadcr=16038_13644378&jp-ad-ap=0&keywords=%E8%A9%95%E4%BE%A1%E6%8C%87%E6%A8%99%E5%85%A5%E9%96%80&qid=1681817657&sr=8-1)\
+に網羅的に評価指標について書かれておりおすすめです。\
+R界隈の先輩方に感謝！！
 
 
 ## 最後にネタバラしもふくめて
@@ -367,51 +375,40 @@ pred <- rf_fit %>%
 
 # EOF<br>Thank you!!
 
-## これに対する回答は？
-## 付帯要素
+## おまけ
 
-```         
-- CRANのすすめ
+### こまったときのNEXTアクション
+  1. HELP(Rstudio : F1キー)\
+  まずここから
+  1. viggnet\
+  サンプルコードなどが使い方とともにのっている。
+  1. rwakalangに質問\
+   日本のR最大のコミュニティーなので活用しない手はない
+  1. F2ボタン\
+  関数が宣言されているソースを確認できる。\
+  ハードに感じるかもしれないがどうやって動いているか知ると理解が進む事がある。\
+  他者のコードは最高の参考資料です。
+  1. ChatGPT\
+  次世代の相棒
+  
 
-- こまったときのNEXTアクション
-
-    - rwakarang
-
-    - HELP
-
-    - viggnet
-
-    - F2ボタン
-```
-## 最後に
-
-## つぎ何をみるとよいか？
-
-```         
-- \[9 モデルの有効性の判断 \|Rによる整頓されたモデリング (tmwr.org)\](https://www.tmwr.org/performance.html)
-```
-
-\- 参考文献
-
-```         
-- [tidymodels で分類モデルをハイパーパラメータ・チューニングして学習して予測して評価する - Qiita\](https://qiita.com/KotaYoneda/items/1cde4d5b4c36ebdf0e72)
-
+## 参考文献 等々 {.scrollable}
+- [tidymodels で分類モデルをハイパーパラメータ・チューニングして学習して予測して評価する - Qiita](https://qiita.com/KotaYoneda/items/1cde4d5b4c36ebdf0e72)
 - [tidymodelsによるtidyな機械学習（その1：データ分割と前処理から学習と性能評価まで） - Dropout (hatenablog.com)](https://dropout009.hatenablog.com/entry/2019/01/06/124932#tidy%E3%81%AA%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92%E3%83%95%E3%83%AD%E3%83%BC)
-
 - [Rユーザのためのtidymodels\[実践\]入門 〜モダンな統計・機械学習モデリングの世界：書籍案内｜技術評論社 (gihyo.jp)](https://gihyo.jp/book/2023/978-4-297-13236-1)
-
 - [【R】tydymodelsを用いてlightgbmをやってみる（その３） - Qiita](https://qiita.com/kenkenvw/items/d605050a88636cd677e7)
 
 - [R と tidymodels を使用して機械学習モデルを作成する - Training | Microsoft Learn](https://learn.microsoft.com/ja-jp/training/paths/machine-learning-with-r/)
 
 - [【tidymodels講座1】当講座の概要 - データサイエンスの道標 (datasciencemore.com)](https://datasciencemore.com/r-tidymodels-overview/)
 
-- [www.bing.com](https://www.bing.com/ck/a?!&&p=2e05a1addb3ff7d8JmltdHM9MTY3OTc4ODgwMCZpZ3VpZD0xNTRhNDMwZC00MTcwLTY2YzctMGM5MS01Mjc1NDAwYTY3NDEmaW5zaWQ9NTI3Mw&ptn=3&hsh=3&fclid=154a430d-4170-66c7-0c91-5275400a6741&psq=tidymodels+R&u=a1aHR0cHM6Ly9xaWl0YS5jb20vUmluZ2FfaHlqL2l0ZW1zLzdmZWQ5YTNhN2NjMjVjZGZhNjk1&ntb=1)
+- [ご注文は学習済モデルの確認ですか？BROOM【tidymodels, broom】 \- Qiita](https://qiita.com/Ringa_hyj/items/7fed9a3a7cc25cdfa695)
 
-- [www.bing.com](https://www.bing.com/ck/a?!&&p=e4c65784a040f81eJmltdHM9MTY3OTc4ODgwMCZpZ3VpZD0xNTRhNDMwZC00MTcwLTY2YzctMGM5MS01Mjc1NDAwYTY3NDEmaW5zaWQ9NTMxNA&ptn=3&hsh=3&fclid=154a430d-4170-66c7-0c91-5275400a6741&psq=tidymodels+R&u=a1aHR0cHM6Ly9kYXRhc2NpZW5jZW1vcmUuY29tL3ItdGlkeW1vZGVscy10aWR5dmVyc2Uv&ntb=1)
-
+- [【tidymodels講座2】\{tidyverse\}探索的データ分析 \- データサイエンスの道標](https://datasciencemore.com/r-tidymodels-tidyverse/)
 - [Books \- Tidy Modeling with R](https://www.tidymodels.org/books/tmwr/)
 - [tidymodelsで覚えるRでのモデル構築と運用 / tidymodels2020 \- Speaker Deck](https://speakerdeck.com/s_uryu/tidymodels2020)
 - [ご注文は学習済モデルの確認ですか？BROOM【tidymodels, broom】 \- Qiita](https://qiita.com/Ringa_hyj/items/7fed9a3a7cc25cdfa695)
 - [【tidymodels講座2】\{tidyverse\}探索的データ分析 \- データサイエンスの道標](https://datasciencemore.com/r-tidymodels-tidyverse/)
-```
+
+- [9 モデルの有効性の判断 \|Rによる整頓されたモデリング (tmwr.org)](https://www.tmwr.org/performance.html)
+
