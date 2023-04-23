@@ -7,18 +7,39 @@ format:
     width: 1280
     height: 720
     slide-number: true
+    preview-links: auto
     footer: "#TokyoR"
+    self-contained: true
+    reference-location: document
+
 lang: ja
+engine: knitr
 ---
 
-# tidymodelsでモデリング 事始め
+# はじめに
 
 ## 自己紹介
 
--   名前 : 黒田
--   所属 : 電通国際情報サービス
+::: columns
+::: {.column width="25%"}
+![](./181120_8091.jpg)
+:::
 
-![](./181120_8091.jpg){width="163"}
+::: {.column width="75%"}
+-   [\@Kuroとか くろきち とか](https://twitter.com/akaikaze_)
+    -   アカウント名の由来はむかーしのっていたカワサキの900ccの赤とKAZE(カワサキライダーズクラブ)とをくっつけた。
+-   電通国際情報サービスというSIerでAI関係の仕事しています。
+-   主にPMと教育事業担当
+-   仕事ではほぼプログラム書きません。
+-   Rに最初にさわったのは大学の頃だから、、、、、20年以上まえですかね？ ≠ R歴
+-   Osaka.Rで朝から黙々してます。
+:::
+:::
+
+## 本日のセッションで説明すること
+
+-   機械学習界隈におけるモデリングってなんぞや？
+-   R でどうやるのがナウい？(死語)
 
 ## モデリングとは？
 
@@ -28,135 +49,372 @@ lang: ja
 
 #### 機械学習領域(私見)
 
-(過去に)定義された数理モデルに実データをあてはめ、現象にあわせた数理モデルをつくる、試行錯誤を含む行為および そのモデルの確からしさを確認する行為。
+(過去に)定義された数式(アルゴリズム)に実データをあてはめ、現象にあわせた数理モデルをつくるための試行錯誤を含む行為および そのモデルの確からしさを確認する行為。
 
-## 機械学習領域でのモデリングという行為の位置付け
+## ざっくりあわらわすと
 
-![](./t.drawio.svg)
+以下のような行為をゴールにむけて何度も行うこと
+
+![](./%E6%A6%82%E5%BF%B5modeling.drawio.svg){fig-align="center" width="80%"}
+
+## 参考 : データ分析のワークフロー
 
 Wickham and Grolemund(2016) より作成
 
-## モデリングでやることの全体像
+![](./t.drawio.svg){fig-align="center"}
 
-サンプリング → 前処理、特徴量エンジニアリング → モデル構築 → モデル性能評価 → パラメータ探索
+## モデリング内でタスク(検討することは)たくさんある
 
-## tidymodelsとはなにか？
+### モデリングで実施するタスク(例) {.scrollable}
 
-### モデリングで必須の反復作業に課題あり
+1)  モデルの選択
+    -   複数モデル適用と評価\
+        ランダムフォレスト Lasso ニューラルネットワーク
+    -   タスク設定\
+        回帰でやるのか？　分類でいくのか？
+    -   ハイパーパラメータチューニング(初期設定値みたいなもの)
+2)  評価の決定
+    -   複数指標の検討\
+        RMSEが良いのか？RMSLEがよいのか？
+    -   汎用性能検討\
+        過学習していないか？
+    -   過去のモデルと比較の比較
+    -   サンプリング方法\
+        クロスバリデーションする？
 
-Rではモデルを含む分析を実行するためのパーツがパッケージとして提供されている
+## モデリング内でタスク(検討することは)たくさんある {auto-animate=true  visibility="uncounted"}
 
--   パッケージ毎に関数の記法が違う\
-    例)ランダムフォレスト系
+### モデリングで実施するタスク(例)
 
-    +----------------+-----------------+----------------+------------------------+
-    | パッケージ     | 決定木に与える\ | 作成する\      | ノード中の\            |
-    |                | 特徴量数        | 決定木の数     | 最小サンプルの数       |
-    +:==============:+:===============:+:==============:+:======================:+
-    | ranger         | mtry            | num.trees      | min.node.size          |
-    +----------------+-----------------+----------------+------------------------+
-    | randomForest   | mtry            | ntree          | nodesize               |
-    +----------------+-----------------+----------------+------------------------+
-    | Rborist        | nSamp           | nTree          | minNode                |
-    +----------------+-----------------+----------------+------------------------+
-    | sparlyr        | mtry            | num.trees      | min_instances_per_node |
-    +----------------+-----------------+----------------+------------------------+
+3)  データの処置
+    -   特徴量エンジニアリング
+    -   欠損値対応等\
+        欠損は削除する？補完する？
 
--   データの入力、出力の形式が違う
+等々
 
-## tidymodelsに含まれる主なパッケージとモデリングでの位置付け
+::: aside
+もう少し詳細に学びたい場合は瓜生さんのスライドが非常によくまとまっていますので一読をお勧めします。 瓜生さんありがとう！！
 
-## 本日説明しないこと
+[tidymodelsで覚えるRでのモデル構築と運用 / tidymodels2020 - Speaker Deck](https://speakerdeck.com/s_uryu/tidymodels2020)
+:::
 
-ワークフローについて
+## Rにおけるモデリングの課題 {visibility="hidden"}
 
-こまかなパラメータ探索、
+### タスクを横断的に実行できるものがない。
 
-詳細なアルゴリズムの説明
+各パッケージはパッケージの目的の範囲しかあつかっていない。\
+例)
 
-## 本編
+| タスク           | パッケージ    |
+|------------------|---------------|
+| サンプリング     | rsample|
+| モデル           | ranger        |
+| パラメータサーチ | caret or 自作 |
 
-## サンプリング
+### パッケージ毎にインターフェースが違う
 
-{rsample}
 
-## データ分割
-### モデルの性能を評価するために入力データを学習データ(train)と評価データ(test)に分割します。
+例)ランダムフォレスト系
 
-基本的な構文
++---------------+-----------------+---------------+------------------------+
+| パッケージ    | 決定木に与える\ | 作成する\     | ノード中の\            |
+|               | 特徴量数        | 決定木の数    | 最小サンプルの数       |
++:=============:+:===============:+:=============:+:======================:+
+| ranger        | mtry            | num.trees     | min.node.size          |
++---------------+-----------------+---------------+------------------------+
+| randomForest  | mtry            | ntree         | nodesize               |
++---------------+-----------------+---------------+------------------------+
+| Rborist       | nSamp           | nTree         | minNode                |
++---------------+-----------------+---------------+------------------------+
+| sparlyr       | mtry            | num.trees     | min_instances_per_node |
++---------------+-----------------+---------------+------------------------+
 
+
+## tidymodels
+モデリングにかかわる各種のタスクを統一的にできるよう各種のパッケージを包含しつかいやすくしたもの。\
+
+まずこれいれておけば、大体解決できると思えば良い。 ^[アルゴリズムについては数が多いので別にインストールは必要]
+
+::: columns
+::: {.column width="50%"}
+```
+─── tidymodels 1.0.0 ──
+✔ broom        1.0.4     ✔ recipes      1.0.5
+✔ dials        1.1.0     ✔ rsample      1.1.1
+✔ dplyr        1.1.1     ✔ tibble       3.2.1
+✔ ggplot2      3.4.1     ✔ tidyr        1.3.0
+✔ infer        1.0.4     ✔ tune         1.0.1
+✔ modeldata    1.1.0     ✔ workflows    1.1.3
+✔ parsnip      1.0.4     ✔ workflowsets 1.0.0
+✔ purrr        1.0.1     ✔ yardstick    1.1.0
+✔ broom        1.0.4     ✔ recipes      1.0.5
+✔ dials        1.1.0     ✔ rsample      1.1.1
+✔ dplyr        1.1.1     ✔ tibble       3.2.1
+✔ ggplot2      3.4.1     ✔ tidyr        1.3.0
+✔ infer        1.0.4     ✔ tune         1.0.1
+✔ modeldata    1.1.0     ✔ workflows    1.1.3
+✔ parsnip      1.0.4     ✔ workflowsets 1.0.0
+✔ purrr        1.0.1     ✔ yardstick    1.1.0
+```
+
+::: 
+::: {.column width="50%"}
+タスクと包含パッケージとの関係例
+
+| タスク           | パッケージ    |
+|------------------|---------------|
+| サンプリング     | rsample|
+| 前処理           | dplyr purrr tidyr        |
+| パラメータサーチ | tune dials |
+| モデルの性能評価 | yardstick |
+| 可視化           | ggplot2 |
+::: 
+::: 
+
+::: aside
+わたしも全てのパッケージを理解しているわけではない。
+::: 
+
+## 今日覚えてもらうこと
+
+tydymodelsをつかって以下の3つについてちょっとわかってもらいます。
+
+1. モデリングまでの一連の流れ(コードベース)
+1. サンプリング
+1. モデル適用
+1. 評価
+
+::: aside
+※他の方のセッションで、tidyverseをつかったデータ整理はなんとなーくわかっている状態を想定してます。
+::: 
+
+## モデリングまでの一連の流れ(コードベース) {.scrollable}
+```{r, prompt=TRUE, echo=TRUE}
+#| code-line-numbers: "|17-21|23-30|32-36"
+# ライブラリの読み込み
+library(tidyverse)
+library(tidymodels)
+# アルゴリスムこれだけはインストールされないので別途install_packageする。
+library(ranger)
+
+# データの読み込み
+# CSVから読みこむときは下記
+# data <- readr::read_csv("path/to/aaaa.csv")
+# 今回は[iris]を利用
+iris_df <- iris %>% as_tibble()
+
+# データの前処理
+iris_df <- iris_df %>%
+  mutate(Species = as.factor(Species))
+
+# データの分割
+set.seed(123)
+split <- initial_split(iris_df, prop = 0.7)
+train_data <- training(split)
+test_data <- testing(split)
+
+# モデルの定義
+rf_spec <- rand_forest(mtry = 3, trees = 500) %>%
+  set_mode("classification") %>%
+  set_engine("ranger")
+
+# モデルの学習
+rf_fit <- rf_spec %>%
+  fit(Species ~ ., data = train_data)
+
+# モデルの評価
+pred_metrics <-
+  rf_fit %>%
+    predict(test_data) %>%
+    bind_cols(test_data) %>%
+    metrics(truth = Species, estimate = .pred_class)
+```
+
+## サンプリング : resample パッケージ
+
+### 手持ちのデータを学習データ(train)と評価データ(test)に分割します。
+
+#### なぜ？
+モデルの性能を評価するため。\
+学習に利用したデータ=既知(モデルが知っている)なので、モデルの評価に利用するとカンニングになる。\
+このカンニングのことを、リーケージとよぶ。\
+評価の為に新しくデータを用意できればよいが現実的ではないので、今あるデータを2つに分割して既知(学習データ)と未知(評価データ)として便宜あつかいます。
+
+::: aside
+リーケージについては下記などを参考に\
+[機械学習のリーケージについて考える｜西岡賢一郎@研究者から経営者へ｜note](https://note.com/kenichiro/n/n2ff08344160a#QYIn9)
+
+[正解率が高すぎる？AIを間違って導入しないために最低限知っておきたい知識｜西岡賢一郎@研究者から経営者へ｜note](https://note.com/kenichiro/n/nb46a7e112cfc#aX9FT)
+:::
+
+## サンプリング : resample パッケージ {.scrollable}
 ```{r,echo=TRUE, prompt=TRUE}
 library(rsample)
-df <- iris
-# 8:2で分割するよという宣言
-df_split <- initial_split(df, prop=0.8)
+library(tidyverse)
+
+# as_tibbleはなくてもよい。
+iris_df <- iris %>% as_tibble()
+
+# 学習:評価=7:3で分割するよという宣言
+df_split <- initial_split(iris_df, prop=0.7)
 
 # 学習データ抽出
 df_train <- training(df_split)
-nrow(df_train)
 
 #評価データ抽出
 df_test <- testing(df_split)
-nrow(df_test)
+
+paste(nrow(iris_df),nrow(df_train),nrow(df_test),sep=" - ")
 ```
 
-このさき交差検証という手法がでてきます。
 
-## 分割方法は
+## モデル適用 : persnipパッケージ {auto-animate=true}
+### 機械学習タスクや利用するアルゴリズムやハイパーパラメータなどを設定し、実際にデータを当てはめ(学習)る。
 
-## 前処理、特徴量エンジニアリング
+```{r echo=TRUE, prompt=FALSE}
+# モデルの定義
+rf_spec <- 
+  rand_forest(mtry = 3, trees = 500) %>%
+  set_mode("classification") %>%
+  set_engine("ranger")
 
-## モデル構築
-
-## モデル性能評価
-
-## パラメータ探索 
-
-## 最後に
-
-## つぎ何をみるとよいか？
-
-```         
-- \[9 モデルの有効性の判断 \|Rによる整頓されたモデリング (tmwr.org)\](https://www.tmwr.org/performance.html)
+# モデルの学習
+rf_fit <- rf_spec %>%
+  fit(Species ~ ., data = train_data)
 ```
 
-## 付帯要素
+## モデル適用 : persnipパッケージ {auto-animate=true  visibility="uncounted"}
 
-```         
-- CRANのすすめ
+```{r echo=TRUE, prompt=FALSE}
+#| code-line-numbers: "1-5"
+# モデルの定義
+rf_spec <- 
+  rand_forest(mtry = 3, trees = 500) %>%
+  set_mode("classification") %>%
+  set_engine("ranger")
 
-- こまったときのNEXTアクション
-
-    - rwakarang
-
-    - HELP
-
-    - viggnet
-
-    - F2ボタン
+# モデルの学習
+rf_fit <- rf_spec %>%
+  fit(Species ~ ., data = train_data)
 ```
 
-\- 参考文献
+### 利用できるモデルを知るには？
+どんなアルゴリズムに対応しているかは下記をチェック\
+[Explore tidymodels \- Search parsnip models](https://www.tidymodels.org/find/parsnip/)
 
-```         
-- [tidymodels で分類モデルをハイパーパラメータ・チューニングして学習して予測して評価する - Qiita\](https://qiita.com/KotaYoneda/items/1cde4d5b4c36ebdf0e72)
 
+## モデル適用 : persnipパッケージ {auto-animate=true  visibility="uncounted"}
+```{r, echo=TRUE, prompt=FALSE}
+#| code-line-numbers: "7-13"
+# モデルの定義
+rf_spec <- 
+  rand_forest(mtry = 3, trees = 500) %>%
+  set_mode("classification") %>%
+  set_engine("ranger")
+
+# モデルの学習
+rf_fit <- rf_spec %>%
+  fit(Species ~ ., data = train_data)
+
+# あえて説明変数を絞りたい場合は`+`でつなぐとよい。
+#rf_fit <- rf_spec %>%
+#  fit(Species ~ Sepal.Length+Sepal.Width, data = train_data)
+```
+
+### formula 
+目的変数 ~(チルダ) .(ドット)でつないているところがformulaです。\
+.(ドット)は目的変数以外の全てをあらわします。\
+説明変数を明示的に示す場合は`+`でつなぐとよいです。\
+一部だけ利用するようなシーンは一般的ではなく、前処理で事前に落しておくのが一般的です。
+
+## 評価 : yardstick {auto-animate=true}
+```{r, echo=TRUE, prompt=FALSE}
+# モデルの評価
+pred_metrics <-
+  rf_fit %>%
+    predict(test_data) %>%
+    bind_cols(test_data) %>%
+    metrics(truth = Species, estimate = .pred_class)
+```
+
+### 未知データ(評価データ)にあてはめて、あてはまり度合いを測る。
+教師あり学習においては評価は答えあわせです。\
+`predict`でモデルくんの回答を作り、`bind_cols`で問題と答えとセットにする。\
+`metrics`で採点。採点基準はaccuracy(正解率)やMSE(平均二乗誤差)など、タスクと得たい結果にあわせて選択する必要がある。\
+どんな評価指標があるかは[こちら](https://yardstick.tidymodels.org/articles/metric-types.html)を参照のこと。\
+
+## 評価 : yardstick {auto-animate=true visibility="uncounted"}
+### また、
+[![評価指標入門](./評価指標入門.jpg){fig-align="center" }](https://www.amazon.co.jp/%E8%A9%95%E4%BE%A1%E6%8C%87%E6%A8%99%E5%85%A5%E9%96%80%E3%80%9C%E3%83%87%E3%83%BC%E3%82%BF%E3%82%B5%E3%82%A4%E3%82%A8%E3%83%B3%E3%82%B9%E3%81%A8%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E3%82%92%E3%81%A4%E3%81%AA%E3%81%90%E6%9E%B6%E3%81%91%E6%A9%8B-%E9%AB%98%E6%9F%B3-%E6%85%8E%E4%B8%80-ebook/dp/B0BT7GBF5L/ref=sr_1_1?adgrpid=146733477735&hvadid=649200618859&hvdev=c&hvqmt=e&hvtargid=kwd-1958982634281&hydadcr=16038_13644378&jp-ad-ap=0&keywords=%E8%A9%95%E4%BE%A1%E6%8C%87%E6%A8%99%E5%85%A5%E9%96%80&qid=1681817657&sr=8-1)\
+に網羅的に評価指標について書かれておりおすすめです。\
+R界隈の先輩方に感謝！！
+
+
+## 最後にネタバラしもふくめて
+
+本セッションで活用したコードは、ChatGPTさんに聞いて作ったものになります。\
+ググるのも良いのですが、コード界隈はChatGPTさんが素晴しいです。\
+まずコードを読み、わからないところを調べる方が効率的でもありますので是非活用してみてください！！\
+
+以下がプロンプト例になります。
+
+```{size = "huge", echo=T}
+機械学習モデルの学習スクリプトの例を示してください。
+
+以下の要件を満してください
+- 言語: R言語 
+- ライブラリ: tidyverse tidymodel,ranger
+- アルゴリズム: randomforest
+- データセット名: ああああ 
+  - 目的変数: 目的変数
+  - 説明変数: ｔ1,ｔ2,ｔ3,ｔ4,ｔ5,ma1,ma2
+- タスク: 回帰
+- データ分割: 7:3
+- 交差検証: false
+
+```
+
+::: aside
+今回、PowerPoint封印してみましたが、スライド作りに三倍(特にお絵描き系)かかった感触です。
+:::
+
+# EOF<br>Thank you!!
+
+## おまけ
+
+### こまったときのNEXTアクション
+  1. HELP(Rstudio : F1キー)\
+  まずここから
+  1. viggnet\
+  サンプルコードなどが使い方とともにのっている。
+  1. rwakalangに質問\
+   日本のR最大のコミュニティーなので活用しない手はない
+  1. F2ボタン\
+  関数が宣言されているソースを確認できる。\
+  ハードに感じるかもしれないがどうやって動いているか知ると理解が進む事がある。\
+  他者のコードは最高の参考資料です。
+  1. ChatGPT\
+  次世代の相棒
+  
+
+## 参考文献 等々 {.scrollable}
+- [tidymodels で分類モデルをハイパーパラメータ・チューニングして学習して予測して評価する - Qiita](https://qiita.com/KotaYoneda/items/1cde4d5b4c36ebdf0e72)
 - [tidymodelsによるtidyな機械学習（その1：データ分割と前処理から学習と性能評価まで） - Dropout (hatenablog.com)](https://dropout009.hatenablog.com/entry/2019/01/06/124932#tidy%E3%81%AA%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92%E3%83%95%E3%83%AD%E3%83%BC)
-
 - [Rユーザのためのtidymodels\[実践\]入門 〜モダンな統計・機械学習モデリングの世界：書籍案内｜技術評論社 (gihyo.jp)](https://gihyo.jp/book/2023/978-4-297-13236-1)
-
 - [【R】tydymodelsを用いてlightgbmをやってみる（その３） - Qiita](https://qiita.com/kenkenvw/items/d605050a88636cd677e7)
 
 - [R と tidymodels を使用して機械学習モデルを作成する - Training | Microsoft Learn](https://learn.microsoft.com/ja-jp/training/paths/machine-learning-with-r/)
 
 - [【tidymodels講座1】当講座の概要 - データサイエンスの道標 (datasciencemore.com)](https://datasciencemore.com/r-tidymodels-overview/)
 
-- [www.bing.com](https://www.bing.com/ck/a?!&&p=2e05a1addb3ff7d8JmltdHM9MTY3OTc4ODgwMCZpZ3VpZD0xNTRhNDMwZC00MTcwLTY2YzctMGM5MS01Mjc1NDAwYTY3NDEmaW5zaWQ9NTI3Mw&ptn=3&hsh=3&fclid=154a430d-4170-66c7-0c91-5275400a6741&psq=tidymodels+R&u=a1aHR0cHM6Ly9xaWl0YS5jb20vUmluZ2FfaHlqL2l0ZW1zLzdmZWQ5YTNhN2NjMjVjZGZhNjk1&ntb=1)
+- [ご注文は学習済モデルの確認ですか？BROOM【tidymodels, broom】 \- Qiita](https://qiita.com/Ringa_hyj/items/7fed9a3a7cc25cdfa695)
 
-- [www.bing.com](https://www.bing.com/ck/a?!&&p=e4c65784a040f81eJmltdHM9MTY3OTc4ODgwMCZpZ3VpZD0xNTRhNDMwZC00MTcwLTY2YzctMGM5MS01Mjc1NDAwYTY3NDEmaW5zaWQ9NTMxNA&ptn=3&hsh=3&fclid=154a430d-4170-66c7-0c91-5275400a6741&psq=tidymodels+R&u=a1aHR0cHM6Ly9kYXRhc2NpZW5jZW1vcmUuY29tL3ItdGlkeW1vZGVscy10aWR5dmVyc2Uv&ntb=1)
-
+- [【tidymodels講座2】\{tidyverse\}探索的データ分析 \- データサイエンスの道標](https://datasciencemore.com/r-tidymodels-tidyverse/)
 - [Books \- Tidy Modeling with R](https://www.tidymodels.org/books/tmwr/)
 - [tidymodelsで覚えるRでのモデル構築と運用 / tidymodels2020 \- Speaker Deck](https://speakerdeck.com/s_uryu/tidymodels2020)
 - [ご注文は学習済モデルの確認ですか？BROOM【tidymodels, broom】 \- Qiita](https://qiita.com/Ringa_hyj/items/7fed9a3a7cc25cdfa695)
 - [【tidymodels講座2】\{tidyverse\}探索的データ分析 \- データサイエンスの道標](https://datasciencemore.com/r-tidymodels-tidyverse/)
-```
+
+- [9 モデルの有効性の判断 \|Rによる整頓されたモデリング (tmwr.org)](https://www.tmwr.org/performance.html)
+
