@@ -7,7 +7,7 @@ project:
     - 2023_TokyoR_for_begineer
 
 website:
-  title: "東京R資料置き場"
+  title: "TokyoR資料置き場"
   navbar:
     background: primary
     left:
